@@ -19,7 +19,7 @@ code.
 The progam uses trial division to find small factors, and Pollard's Rho algorithm
 to find larger factors. This is faster than relying solely on trial division, and
 avoids a large unwieldy list of prime numbers.
-A list of the 1st  192725 prime numbers is generated using the Sieve of Eratosthenes. 
+A list of the 1st 192725 prime numbers is generated using the Sieve of Eratosthenes. 
 This list is used for trial division. If the residue after trial division is not prime,
 Pollard's Rho algorithm is used to find the remaining factors.
 
@@ -45,7 +45,7 @@ alternative method would need to be found.
 note: a 64-bit number can have at most 15 unique prime fracors. */
 struct factorsS {
     int factorcount;           // number of unique prime factors
-    __int64 factorlist[19][2]; // prime factor, exponent
+    int64_t factorlist[19][2]; // prime factor, exponent
 };
 
 /* used for 128-bit integers */
@@ -116,7 +116,7 @@ static void setBit(const uint64_t x, bool array[]) {
 
 // fast way to check for primes, but generatePrimes must have been called first.
 // true indicates a prime number
-bool isPrime2(unsigned __int64 num) {
+bool isPrime2(uint64_t num) {
 
     if (num == 1) return false;
     if (num == 2) return true;
@@ -207,8 +207,8 @@ uint128_t divide_uint128_by_uint64(uint128_t dividend, uint64_t divisor,
 }
 
 /*  calculates (a * b) % mod taking into account that a * b might overflow 64-bit number */
-unsigned __int64 modMult(const unsigned __int64 a, const unsigned __int64 b,
-    const unsigned __int64 mod) {
+uint64_t modMult(const uint64_t a, const uint64_t b,
+    const uint64_t mod) {
     /* this version uses intrinsics for 128-bit arithmetic instead of gmp/MPIR
     extended precision functions */
     uint128_t prod, quot;
@@ -223,11 +223,11 @@ unsigned __int64 modMult(const unsigned __int64 a, const unsigned __int64 b,
 }
 
 // calculate x^n%mod. Works even when intermediate result > 64-bits.
-unsigned __int64 modPowerLL(const unsigned __int64 x, const unsigned __int64 np,
-    unsigned __int64 mod) {
+uint64_t modPowerLL(const uint64_t x, const uint64_t np,
+    uint64_t mod) {
     /* this version uses intrinsics for 128-bit arithmetic instead of gmp/MPIR
    extended precision functions */
-    unsigned __int64 n = np, p;  // p is a power of x
+    uint64_t n = np, p;  // p is a power of x
     uint128_t r = { 0, 1 };
 
     p = x;
@@ -254,12 +254,12 @@ unsigned __int64 modPowerLL(const unsigned __int64 x, const unsigned __int64 np,
 }
 
 // n-1 = 2^s * d with d odd by factoring powers of 2 from n-1.
-// returns true if n is is a strong probable prime to base d, otherwise false
-static bool witness(unsigned __int64 n, unsigned int s, unsigned __int64 d,
-    unsigned __int64 a)
+// returns true if n is is a strong probable prime to base a, otherwise false
+static bool witness(uint64_t n, unsigned int s, uint64_t d,
+    uint64_t a)
 {
-    unsigned __int64 x = modPowerLL(a, d, n);   // calculate a^d%n
-    unsigned __int64 y;
+    uint64_t x = modPowerLL(a, d, n);   // calculate a^d%n
+    uint64_t y;
 
     while (s) {
         //y = (x * x) % n;
@@ -290,7 +290,7 @@ check whether n is prime
 * if n < 18,446,744,073,709,551,616 = 2^64, it is enough to test a = 2, 3, 5, 7, 11, 13, 17, 19, 23,
 *                                           29, 31, and 37
 */
-static bool isPrimeMR(unsigned __int64 n)
+static bool isPrimeMR(uint64_t n)
 {
     if (((!(n & 1)) && n != 2)          // if n is even & > 2 return false
         || (n < 2) 						// if n < 2 return false (i.e  if n=0 or 1)
@@ -301,7 +301,7 @@ static bool isPrimeMR(unsigned __int64 n)
     if (n <= 3)
         return true;
     // we have now established that n is an odd number > 3
-    unsigned __int64 d = n / 2;  // note: n is odd, so 2*d = n-1
+    uint64_t d = n / 2;  // note: n is odd, so 2*d = n-1
     unsigned int s = 1;
 
     /* get the position of the least significant 1 bit in d. If d were zero,
@@ -447,7 +447,7 @@ uint64_t PollardRho(uint64_t n, int depth,
 }
 
 /* get prime factors of tnum, using trial division and Pollard's Rho algorithm */
-bool primeFactors(unsigned __int64 tnum, factorsS& f, const unsigned int SEED) {
+bool primeFactors(uint64_t tnum, factorsS& f, const unsigned int SEED) {
     unsigned  int count = 0, i = 0;
     unsigned int seed;
  
@@ -596,7 +596,7 @@ uint64_t getTestNumber(void) {
     uint64_t p1, p2, result, top_up;
     std::random_device rd;   // non-deterministic generator
     // distribute results between 1 and MAX inclusive.
-    std::uniform_int_distribution<uint64_t> dist(1, ULONG_MAX);
+    std::uniform_int_distribution<uint64_t> dist(LONG_MAX, ULONG_MAX);
     std::mt19937_64 gen(rd());  // to seed mersenne twister.
     p1 = dist(gen);
     p1 = nextP(p1);
@@ -634,6 +634,7 @@ int main()
          18'446744'030759'878681ULL
     };
     double timeused = 0.0;
+    int counter = 0;
     try {
         clock_t start = clock();
         // generatePrimes(ULONG_MAX); /* this would take 30 seconds and a lot of memory, */
@@ -646,16 +647,20 @@ int main()
         printf_s("Prime list generated. Time used: %g seconds \n\n", elapsed);
         // system("PAUSE");  /* press any key to continue */
 
-        for (int i = 1; i <= 10000; i++) {
+        for (int i = 1; i <= 1000; i++) {
             auto x = getTestNumber();   /* set x to number to factorise */
             test(x, 0, timeused);     /* factorise x, print factors. */
+            counter++;
             //  system("PAUSE");  /* press any key to continue */
         }
 
-        for (auto x : testlist)
+        for (auto x : testlist) {
             test(x, 0, timeused);  /* factorise x, print factors. */
+            counter++;
+        }
 
-        printf_s("total factorisation time = %g seconds \n", timeused);
+        printf_s("total factorisation time = %g seconds, average = %g \n", 
+            timeused, timeused/counter);
 
         system("PAUSE");    /* press any key to continue*/
     }
