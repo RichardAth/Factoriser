@@ -16,7 +16,7 @@
 /* This a program to factorise any 64-bit number. It is designed to be efficient, 
 but not use obscure non-standard libraries. Some code is adapted from open-source
 code. 
-The progam uses trial division to find small factors, and Pollard's Rho algorithm
+The program uses trial division to find small factors, and Pollard's Rho algorithm
 to find larger factors. This is faster than relying solely on trial division, and
 avoids a large unwieldy list of prime numbers.
 A list of the 1st 192725 prime numbers is generated using the Sieve of Eratosthenes. 
@@ -42,7 +42,7 @@ alternative method would need to be found.
 
 
 /* struct intended to contain a list of prime factors. 
-note: a 64-bit number can have at most 15 unique prime fracors. */
+note: a 64-bit number can have at most 15 unique prime factors. */
 struct factorsS {
     int factorcount;           // number of unique prime factors
     int64_t factorlist[19][2]; // prime factor, exponent
@@ -232,7 +232,7 @@ uint64_t modPowerLL(const uint64_t x, const uint64_t np,
 
     p = x;
 
-    /* loop log2(n) times. Minimise number of modular multiplcations needed */
+    /* loop log2(n) times. Minimise number of modular multiplications needed */
     while (n > 0) {
         if (n % 2 == 1) {
             r.lo = _umul128(r.lo, p, &r.hi); //    r *= p;
@@ -595,13 +595,13 @@ uint64_t getTestNumber(void) {
     static int ctr = 0;
     uint64_t p1, p2, result, top_up;
     std::random_device rd;   // non-deterministic generator
-    // distribute results between 1 and MAX inclusive.
+    // distribute results between 2^63 and 2^64-1.
     std::uniform_int_distribution<uint64_t> dist(LONG_MAX, ULONG_MAX);
     std::mt19937_64 gen(rd());  // to seed mersenne twister.
-    p1 = dist(gen);
-    p1 = nextP(p1);
+    p1 = dist(gen);  /* get random number */
+    p1 = nextP(p1);  /* get prime (size is about 31-32 bits) */
     p2 = dist(gen);
-    p2 = prevP(p2); 
+    p2 = prevP(p2);  /* get another prime */
     result = p1 * p2;
     top_up = ULLONG_MAX / result;
     result *= top_up;    /* top_up is small factors that should be found by 
